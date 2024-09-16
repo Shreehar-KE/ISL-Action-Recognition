@@ -6,6 +6,10 @@ import mediapipe as mp
 
 
 DATA_PATH = os.path.join('MP_Data')
+try:
+    os.makedirs(os.path.join(DATA_PATH))
+except:
+    pass
 no_sequences = 30
 sequence_length = 30
 signs = [name for name in os.listdir('./'+DATA_PATH)]
