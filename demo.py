@@ -44,7 +44,7 @@ model.compile(optimizer='Adam', loss='categorical_crossentropy',
               metrics=['categorical_accuracy'])
 
 # model.load_weights('./models/test_slr.h5')
-model = tf.keras.models.load_model('./models/slr.keras')
+model = tf.keras.models.load_model('./models/slr_alpha.keras')
 
 
 # 1. New detection variables
