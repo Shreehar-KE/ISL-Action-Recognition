@@ -37,7 +37,7 @@ def check_name(name):
         return True
 
 
-def capture_signs():
+def capture_signs(signs):
     """To capture clips for sign(s) using OpenCV"""
     cap = cv2.VideoCapture(0)
     try:
@@ -94,6 +94,7 @@ def capture_signs():
 def preprocess():
     """To preprocess data & create labels and features"""
     signs = utils.signs
+    print(signs)
     label_map = {label: num for num, label in enumerate(signs)}
     sequences, labels = [], []
 
@@ -127,14 +128,16 @@ while True:
                 if check_name(sign_name):
                     temp.append(sign_name)
 
-            signs = np.array(temp)
+            ip_signs = np.array(temp)
             no_sequences = 30
             sequence_length = 30
 
-            create_folders(signs, no_sequences)
-            print('\n*********** Starting SIGN INPUT COLLECTION in 5 secs ***********\n')
+            create_folders(ip_signs, no_sequences)
+
+            print(
+                '\n*********** Starting SIGN INPUT COLLECTION for in 5 secs ***********\n')
             time.sleep(5)
-            capture_signs()
+            capture_signs(ip_signs)
 
         elif ch == 2:
             if len(signs) > 0:
