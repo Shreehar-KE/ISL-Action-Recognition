@@ -1,18 +1,24 @@
 import cv2
-import os
-import mediapipe as mp
 import numpy as np
 from keras.models import Sequential
 from keras.layers import LSTM, Dense
+import utils
 
-DATA_PATH = os.path.join('MP_Data')
-signs = [name for name in os.listdir('./'+DATA_PATH)]
-signs = np.array(signs)
 
-colors = [(245, 117, 16), (117, 245, 16), (16, 117, 245)]
+DATA_PATH = utils.DATA_PATH
+signs = utils.signs
+
+mp_holistic = utils.mp_holistic
+mp_drawing = utils.mp_drawing
+
+
+# colors = [(245, 117, 16), (117, 245, 16), (16, 117, 245)]
+colors = [(47, 75, 124), (160, 81, 149), (249, 93, 106), (255, 166, 0), (0, 63, 92), (102, 81, 145), (212, 80, 135),
+          (255, 124, 67)]
 
 
 def prob_viz(res, signs, input_frame, colors):
+    """To visualize the detection probability"""
     output_frame = input_frame.copy()
     for num, prob in enumerate(res):
         cv2.rectangle(output_frame, (0, 60+num*40),
@@ -23,61 +29,7 @@ def prob_viz(res, signs, input_frame, colors):
     return output_frame
 
 
-def mediapipe_detection(image, model):
-    # COLOR CONVERSION BGR 2 RGB
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-    image.flags.writeable = False                  # Image is no longer writeable
-    results = model.process(image)                 # Make prediction
-    image.flags.writeable = True                   # Image is now writeable
-
-    # COLOR CONVERSION RGB 2 BGR
-    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-
-    return image, results
-
-
-def draw_styled_landmarks(image, results):
-    # Draw Face Connections
-    mp_drawing.draw_landmarks(image, results.face_landmarks, mp_holistic.FACEMESH_TESSELATION,
-                              mp_drawing.DrawingSpec(
-                                  color=(80, 110, 10), thickness=1, circle_radius=1),
-                              mp_drawing.DrawingSpec(color=(80, 256, 121), thickness=1, circle_radius=1))
-
-    # Draw Pose Connections
-    mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_holistic.POSE_CONNECTIONS,
-                              mp_drawing.DrawingSpec(
-                                  color=(80, 22, 10), thickness=2, circle_radius=4),
-                              mp_drawing.DrawingSpec(color=(80, 44, 121), thickness=2, circle_radius=2))
-
-    # Draw Left Hand Connections
-    mp_drawing.draw_landmarks(image, results.left_hand_landmarks, mp_holistic.HAND_CONNECTIONS,
-                              mp_drawing.DrawingSpec(
-                                  color=(121, 22, 76), thickness=2, circle_radius=4),
-                              mp_drawing.DrawingSpec(color=(255, 255, 0), thickness=2, circle_radius=2))
-
-    # Draw Right Hand Connections
-    mp_drawing.draw_landmarks(image, results.right_hand_landmarks, mp_holistic.HAND_CONNECTIONS,
-                              mp_drawing.DrawingSpec(
-                                  color=(245, 117, 66), thickness=2, circle_radius=4),
-                              mp_drawing.DrawingSpec(color=(245, 66, 230), thickness=2, circle_radius=2))
-
-
-def extract_keypoints(results):
-    pose = np.array([[res.x, res.y, res.z, res.visibility] for res in results.pose_landmarks.landmark]).flatten(
-    ) if results.pose_landmarks else np.zeros(33*4)
-    face = np.array([[res.x, res.y, res.z] for res in results.face_landmarks.landmark]).flatten(
-    ) if results.face_landmarks else np.zeros(468*3)
-    lh = np.array([[res.x, res.y, res.z] for res in results.left_hand_landmarks.landmark]).flatten(
-    ) if results.left_hand_landmarks else np.zeros(21*3)
-    rh = np.array([[res.x, res.y, res.z] for res in results.right_hand_landmarks.landmark]).flatten(
-    ) if results.right_hand_landmarks else np.zeros(21*3)
-    return np.concatenate([pose, face, lh, rh])
-
-
-mp_holistic = mp.solutions.holistic  # Holistic model
-mp_drawing = mp.solutions.drawing_utils  # Drawing utilities
-
+# ML Model Creation
 model = Sequential()
 model.add(LSTM(64, return_sequences=True,
           activation='relu', input_shape=(30, 1662)))
@@ -91,6 +43,8 @@ model.compile(optimizer='Adam', loss='categorical_crossentropy',
               metrics=['categorical_accuracy'])
 
 model.load_weights('./models/test_slr.h5')
+# model = tf.keras.models.load_model('./models/test_slr.keras')
+
 
 # 1. New detection variables
 sequence = []
@@ -107,13 +61,13 @@ with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=
         frame = cv2.flip(frame, 1)
 
         # Make detections
-        image, results = mediapipe_detection(frame, holistic)
+        image, results = utils.mediapipe_detection(frame, holistic)
 
         # Draw landmarks
-        draw_styled_landmarks(image, results)
+        utils.draw_styled_landmarks(image, results)
 
         # 2. Prediction logic
-        keypoints = extract_keypoints(results)
+        keypoints = utils.extract_keypoints(results)
         sequence.append(keypoints)
         sequence = sequence[-30:]
 
