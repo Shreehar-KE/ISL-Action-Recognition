@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import tensorflow as tf
 from keras.models import Sequential
 from keras.layers import LSTM, Dense
 import utils
@@ -42,8 +43,8 @@ model.add(Dense(signs.shape[0], activation='softmax'))
 model.compile(optimizer='Adam', loss='categorical_crossentropy',
               metrics=['categorical_accuracy'])
 
-model.load_weights('./models/test_slr.h5')
-# model = tf.keras.models.load_model('./models/test_slr.keras')
+# model.load_weights('./models/test_slr.h5')
+model = tf.keras.models.load_model('./models/slr.keras')
 
 
 # 1. New detection variables

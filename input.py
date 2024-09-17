@@ -83,12 +83,17 @@ def capture_signs():
                         # Break gracefully
                         if cv2.waitKey(10) & 0xFF == ord('q'):
                             raise BreakIt
+            cap.release()
+            cv2.destroyAllWindows()
     except BreakIt:
+        cap.release()
+        cv2.destroyAllWindows()
         pass
 
 
 def preprocess():
     """To preprocess data & create labels and features"""
+    signs = utils.signs
     label_map = {label: num for num, label in enumerate(signs)}
     sequences, labels = [], []
 
@@ -109,10 +114,9 @@ def preprocess():
 
 
 # Controller
-print('1.Add Sign\n2.Preprocess Data\n3.Quit')
-
 while True:
     try:
+        print('1.Add Sign\n2.Preprocess Data\n3.Quit')
         ch = int(input('--> '))
         if ch == 1:
             temp = []
@@ -143,8 +147,6 @@ while True:
             break
         else:
             print('\n*********** WRONG INPUT, Try Again ***********\n')
-            print('1.Add Sign\n2.Preprocess Data\n3.Quit')
             continue
     except:
         print('\n*********** WRONG INPUT, Try Again ***********\n')
-        print('1.Add Sign\n2.Preprocess Data\n3.Quit')
