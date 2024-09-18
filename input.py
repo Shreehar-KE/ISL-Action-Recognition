@@ -93,7 +93,7 @@ def capture_signs(signs):
 
 def preprocess():
     """To preprocess data & create labels and features"""
-    signs = utils.signs
+    signs = np.array([name for name in os.listdir('./'+DATA_PATH)])
     print(signs)
     label_map = {label: num for num, label in enumerate(signs)}
     sequences, labels = [], []

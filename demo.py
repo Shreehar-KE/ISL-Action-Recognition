@@ -2,7 +2,8 @@ import cv2
 import numpy as np
 import tensorflow as tf
 from keras.models import Sequential
-from keras.layers import LSTM, Dense
+from keras.layers import LSTM, Dense, Bidirectional, Dropout, Conv1D, MaxPooling1D
+from keras.optimizers import Adam
 import utils
 
 
@@ -32,25 +33,30 @@ def prob_viz(res, signs, input_frame, colors):
 
 # ML Model Creation
 model = Sequential()
-model.add(LSTM(64, return_sequences=True,
-          activation='relu', input_shape=(30, 1662)))
-model.add(LSTM(128, return_sequences=True, activation='relu'))
-model.add(LSTM(64, return_sequences=False, activation='relu'))
+model.add(Conv1D(64, kernel_size=3, activation='relu', input_shape=(30, 1662)))
+model.add(MaxPooling1D(pool_size=2))
+model.add(Bidirectional(LSTM(64, return_sequences=True, activation='relu')))
+model.add(Dropout(0.2))
+model.add(Bidirectional(LSTM(128, return_sequences=True, activation='relu')))
+model.add(Dropout(0.2))
+model.add(Bidirectional(LSTM(64, return_sequences=False, activation='relu')))
+model.add(Dropout(0.2))
 model.add(Dense(64, activation='relu'))
 model.add(Dense(32, activation='relu'))
 model.add(Dense(signs.shape[0], activation='softmax'))
 
-model.compile(optimizer='Adam', loss='categorical_crossentropy',
+optimizer = Adam(learning_rate=0.0001)
+model.compile(optimizer=optimizer, loss='categorical_crossentropy',
               metrics=['categorical_accuracy'])
 
 # model.load_weights('./models/test_slr.h5')
-model = tf.keras.models.load_model('./models/slr_alpha.keras')
+model = tf.keras.models.load_model('./models/slr_conv_new.keras')
 
 
 # 1. New detection variables
 sequence = []
 sentence = []
-threshold = 0.8
+threshold = 0.95
 
 cap = cv2.VideoCapture(0)
 # Set mediapipe model
